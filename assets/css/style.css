@@ -3,3 +3,7 @@ body {
     font-weight: 100;
     font-style: normal;
 }
+
+button {
+  margin: 5px 0px;
+}
