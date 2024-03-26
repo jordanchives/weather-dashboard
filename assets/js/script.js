@@ -1,5 +1,5 @@
 // Constants
-const weatherUrl = 'http://api.openweathermap.org';
+const weatherUrl = 'https://api.openweathermap.org';
 const apiKey = 'dbb9d69af7c33bf456a1d82675d3a72f';
 
 // Document Ready Function
@@ -123,7 +123,6 @@ function setHistory(city) {
 
 // Async Function to Fetch Coordinates
 async function getCoords(city) {
-    console.log('Fetching coordinates for:', city);
     const url = new URL(weatherUrl + '/geo/1.0/direct');
     url.searchParams.append('q', city);
     url.searchParams.append('limit', 1)
