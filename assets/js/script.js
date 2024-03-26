@@ -6,26 +6,29 @@ $(document).ready(function () {
     const searchForm = $('#searchForm');
     const searchInput = $('#searchText');
     const today = $('#today');
-    const history = $('#history');
+    const historyContainer = $('#history');
     const daysContainer = $('#days');
     const fiveDayContainer = $('#fiveDay');
+    const forecastText = $('#forecastText');
 
 
 
     searchForm.submit(function (event) {
-        event.preventDefault(); // Prevent default form submission behavior
+        event.preventDefault();
 
-        const city = searchInput.val().trim(); // Get the entered city from the input field
+        const city = searchInput.val().trim();
+
+        daysContainer.empty();
+        today.empty();
+        forecastText.css('visibility', 'hidden');
 
         if (city !== '') {
-            // Call getCoords function to fetch coordinates for the entered city
+            today.css('visibility', 'visible');
             getCoords(city)
                 .then(coords => {
                     if (coords) {
-                        // If coordinates are available, call getFiveDay function to fetch five-day forecast
                         return getFiveDay(coords);
                     } else {
-                        // If coordinates are not available, handle the error
                         throw new Error('Coordinates not found for the entered city');
                     }
                 })
@@ -34,60 +37,84 @@ $(document).ready(function () {
                         // If forecast data is available, update the UI or do further processing
                         updateToday(city, forecast[0].weather, forecast[0].temp, forecast[0].wind, forecast[0].humidity, forecast[0].date);
                         updateFiveDay(forecast.slice(1));
+                        setHistory(city);
+                        updateHistory();
                         console.log('Forecast:', forecast);
                     } else {
-                        // If forecast data is not available, handle the error
+                        today.html(`<h3>No weather data available for ${city}</h3>`);
                         throw new Error('Forecast data not available');
                     }
                 })
                 .catch(error => {
-                    // Handle any errors that occur during the process
                     console.error('Error:', error);
+                    today.html(`<h3>No weather data available for ${city}</h3>`);
                 });
         } else {
-            // If the input field is empty, display an error message or take appropriate action
             console.error('Please enter a city name');
         }
     });
 
     function updateToday(city, weather, temp, wind, humidity, date) {
         const formattedDate = dayjs.unix(date).format('(M/D/YYYY)');
+        const weatherIconUrl = getWeatherIconUrl(weather);
         today.html(`
+            <header>
             <h2>${city} ${formattedDate}</h2>
-            <p>Weather: ${weather}</p>
+            <img src="${weatherIconUrl}" alt="${weather}" />
             <p>Temperature: ${temp}°F</p>
             <p>Wind: ${wind} mph</p>
             <p>Humidity: ${humidity}%</p>
+            </header>
         `);
     }
-    
+
     function updateFiveDay(fiveDay) {
-        daysContainer.empty();
+        forecastText.css('visibility', 'visible');
         for (const day of fiveDay) {
             const date = dayjs.unix(day.date).format('M/D/YYYY');
-            const weather = day.weather;
-            const temp = day.temp;
-            const wind = day.wind;
-            const humidity = day.humidity;
-    
+            const weatherIconUrl = getWeatherIconUrl(day.weather);
+
             const card = $(`
-                <div class="col card m-1">
-                    <div class="card-body">
-                        <h5 class="card-title">${date}</h5>
-                        <p class="card-text">Weather: ${weather}</p>
-                        <p class="card-text">Temperature: ${temp}°F</p>
-                        <p class="card-text">Wind: ${wind} mph</p>
-                        <p class="card-text">Humidity: ${humidity}%</p>
-                    </div>
+            <div class="col-lg card">
+                <div class="card-body">
+                    <h5 class="card-title">${date}</h5>
+                    <img src="${weatherIconUrl}" alt="${day.weather}" />
+                    <p class="card-text">Temperature: ${day.temp}°F</p>
+                    <p class="card-text">Wind: ${day.wind} mph</p>
+                    <p class="card-text">Humidity: ${day.humidity}%</p>
                 </div>
-            `);
+            </div>
+        `);
 
             daysContainer.append(card);
         }
     }
+
+    function updateHistory() {
+        historyContainer.empty();
+        const history = JSON.parse(localStorage.getItem('history'));
+        for (const city of history) {
+            const item = $(`<button type="button" class="btn btn-secondary form-control">${city}</button>`);
+            item.click(function () {
+                searchInput.val(city);
+                searchForm.submit();
+            });
+            historyContainer.append(item);
+        }
+    }
+
+    if (localStorage.getItem('history')) {
+        updateHistory();
+    }
 });
 
-
+function setHistory(city) {
+    let history = JSON.parse(localStorage.getItem('history')) || [];
+    if (!history.includes(city)) {
+        history.push(city);
+        localStorage.setItem('history', JSON.stringify(history));
+    }
+}
 
 async function getCoords(city) {
     console.log('Fetching coordinates for:', city);
@@ -158,5 +185,42 @@ async function getFiveDay(coords) {
     } catch (error) {
         console.error('Error getting five-day forecast:', error);
         throw error;
+    }
+}
+
+function getWeatherIconUrl(weather) {
+    switch (weather.toLowerCase()) {
+        case 'clear sky':
+        case 'clear':
+            return 'https://openweathermap.org/img/wn/01d@2x.png';
+        case 'few clouds':
+            return 'https://openweathermap.org/img/wn/02d@2x.png';
+        case 'scattered clouds':
+        case 'clouds':
+            return 'https://openweathermap.org/img/wn/03d@2x.png';
+        case 'broken clouds':
+            return 'https://openweathermap.org/img/wn/04d@2x.png';
+        case 'shower rain':
+        case 'drizzle':
+            return 'https://openweathermap.org/img/wn/09d@2x.png';
+        case 'rain':
+            return 'https://openweathermap.org/img/wn/10d@2x.png';
+        case 'thunderstorm':
+            return 'https://openweathermap.org/img/wn/11d@2x.png';
+        case 'snow':
+        case 'sleet':
+            return 'https://openweathermap.org/img/wn/13d@2x.png';
+        case 'mist':
+        case 'fog':
+        case 'haze':
+        case 'smoke':
+        case 'dust':
+        case 'sand':
+        case 'ash':
+        case 'squall':
+        case 'tornado':
+            return 'https://openweathermap.org/img/wn/50d@2x.png';
+        default:
+            return '';
     }
 }

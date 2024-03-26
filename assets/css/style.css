@@ -7,3 +7,11 @@ body {
 button {
   margin: 5px 0px;
 }
+
+.main-container {
+    max-width: 1800px;
+}
+
+#today, #forecastText {
+  visibility: hidden;
+}

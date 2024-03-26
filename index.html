@@ -21,25 +21,22 @@
         <h1>Weather Dashboard</h1>
     </header>
     <main>
-        <div class="container">
+        <div class="container-fluid main-container">
             <div class="row">
-                <div class="col-3" id="searchContainer">
+                <div class="col-md-3" id="searchContainer">
                     <div id="search">
                         <h2 class="color-">Search for a City:</h2>
                         <form id="searchForm" class="form m-1">
                             <input type="text" class="form-control" id="searchText" placeholder="San Diego">
                             <button type="submit" id="searchButton" class="btn btn-light form-control">SEARCH</button>
                         </form>
-                        <div id="history">
-
-                        </div>
                     </div>
                     <div id="history" class="border-top border-light p-1">
-                        <button type="button" id="searchButton" class="btn btn-secondary form-control">SEARCH</button>
+                        <button type="button" class="btn btn-secondary form-control">SEARCH</button>
                     </div>
                 </div>
 
-                <div class="col-9">
+                <div id="forecast" class="col-md-9">
                     <div id="today" class="p-2 border border-light">
                         <header>
                             <h2 id="cityName">ATL</h2>
@@ -50,48 +47,8 @@
                     </div>
                     <div id="fiveDay" class="row m-1 mt-4">
                         <h2 id="forecastText">5-Day Forecast</h2>
-                        <div class="container">
-                            <div class="row ml-1 mr-1" id="days">
-                                <div class="col card m-1">
-                                    <div class="card-body">
-                                        <h5>friday</h5>
-                                        <p class="card-text">
-                                            dfgkljdfglhkj
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="col card m-1">
-                                    <div class="card-body">
-                                        <h5>friday</h5>
-                                        <p class="card-text">
-                                            dfgkljdfglhkj
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="col card m-1">
-                                    <div class="card-body">
-                                        <h5>friday</h5>
-                                        <p class="card-text">
-                                            dfgkljdfglhkj
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="col card m-1">
-                                    <div class="card-body">
-                                        <h5>friday</h5>
-                                        <p class="card-text">
-                                            dfgkljdfglhkj
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="col card m-1">
-                                    <div class="card-body">
-                                        <h5>friday</h5>
-                                        <p class="card-text">
-                                            dfgkljdfglhkj
-                                        </p>
-                                    </div>
-                                </div>
+                        <div class="col-12">
+                            <div class="row ml-1 mr-1 column-gap-1 row-gap-1" id="days">
                             </div>
                         </div>
                     </div>
