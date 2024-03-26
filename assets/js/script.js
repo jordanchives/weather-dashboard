@@ -1,23 +1,24 @@
+// Constants
 const weatherUrl = 'http://api.openweathermap.org';
-const apiKey = localStorage.getItem('weatherAPI') || prompt("Enter your weather API key");
-localStorage.setItem('weatherAPI', apiKey);
+const apiKey = 'dbb9d69af7c33bf456a1d82675d3a72f';
 
+// Document Ready Function
 $(document).ready(function () {
+    // DOM Elements
     const searchForm = $('#searchForm');
     const searchInput = $('#searchText');
     const today = $('#today');
     const historyContainer = $('#history');
     const daysContainer = $('#days');
-    const fiveDayContainer = $('#fiveDay');
     const forecastText = $('#forecastText');
 
-
-
+    // Event Listener for Search Form Submission
     searchForm.submit(function (event) {
         event.preventDefault();
 
         const city = searchInput.val().trim();
 
+        // Clearing previous data
         daysContainer.empty();
         today.empty();
         forecastText.css('visibility', 'hidden');
@@ -34,7 +35,6 @@ $(document).ready(function () {
                 })
                 .then(forecast => {
                     if (forecast) {
-                        // If forecast data is available, update the UI or do further processing
                         updateToday(city, forecast[0].weather, forecast[0].temp, forecast[0].wind, forecast[0].humidity, forecast[0].date);
                         updateFiveDay(forecast.slice(1));
                         setHistory(city);
@@ -54,6 +54,7 @@ $(document).ready(function () {
         }
     });
 
+    // Function to Update Today's Weather
     function updateToday(city, weather, temp, wind, humidity, date) {
         const formattedDate = dayjs.unix(date).format('(M/D/YYYY)');
         const weatherIconUrl = getWeatherIconUrl(weather);
@@ -68,6 +69,7 @@ $(document).ready(function () {
         `);
     }
 
+    // Function to Update Five-Day Forecast
     function updateFiveDay(fiveDay) {
         forecastText.css('visibility', 'visible');
         for (const day of fiveDay) {
@@ -90,9 +92,10 @@ $(document).ready(function () {
         }
     }
 
+    // Function to Update Search History
     function updateHistory() {
         historyContainer.empty();
-        const history = JSON.parse(localStorage.getItem('history'));
+        const history = JSON.parse(localStorage.getItem('history')) || [];
         for (const city of history) {
             const item = $(`<button type="button" class="btn btn-secondary form-control">${city}</button>`);
             item.click(function () {
@@ -103,11 +106,13 @@ $(document).ready(function () {
         }
     }
 
+    // Check if History Exists in Local Storage and Update
     if (localStorage.getItem('history')) {
         updateHistory();
     }
 });
 
+// Function to Set Search History
 function setHistory(city) {
     let history = JSON.parse(localStorage.getItem('history')) || [];
     if (!history.includes(city)) {
@@ -116,6 +121,7 @@ function setHistory(city) {
     }
 }
 
+// Async Function to Fetch Coordinates
 async function getCoords(city) {
     console.log('Fetching coordinates for:', city);
     const url = new URL(weatherUrl + '/geo/1.0/direct');
@@ -124,8 +130,8 @@ async function getCoords(city) {
     url.searchParams.append('appid', apiKey);
 
     try {
-        const response = await fetch(url); // Wait for the fetch request to complete
-        const data = await response.json(); // Wait for the JSON parsing to complete
+        const response = await fetch(url);
+        const data = await response.json();
         console.log('Coordinates response:', data);
 
         if (!data[0]) {
@@ -137,10 +143,11 @@ async function getCoords(city) {
         }
     } catch (error) {
         console.error('Error getting coordinates:', error);
-        throw error; // Propagate the error to the caller
+        throw error;
     }
 }
 
+// Async Function to Fetch Five-Day Forecast
 async function getFiveDay(coords) {
     const url = new URL(weatherUrl + '/data/2.5/forecast');
     url.searchParams.append('lat', coords.lat);
@@ -188,6 +195,7 @@ async function getFiveDay(coords) {
     }
 }
 
+// Function to Get Weather Icon URL
 function getWeatherIconUrl(weather) {
     switch (weather.toLowerCase()) {
         case 'clear sky':
@@ -198,29 +206,29 @@ function getWeatherIconUrl(weather) {
         case 'scattered clouds':
         case 'clouds':
             return 'https://openweathermap.org/img/wn/03d@2x.png';
-        case 'broken clouds':
-            return 'https://openweathermap.org/img/wn/04d@2x.png';
-        case 'shower rain':
-        case 'drizzle':
-            return 'https://openweathermap.org/img/wn/09d@2x.png';
-        case 'rain':
-            return 'https://openweathermap.org/img/wn/10d@2x.png';
-        case 'thunderstorm':
-            return 'https://openweathermap.org/img/wn/11d@2x.png';
-        case 'snow':
-        case 'sleet':
-            return 'https://openweathermap.org/img/wn/13d@2x.png';
-        case 'mist':
-        case 'fog':
-        case 'haze':
-        case 'smoke':
-        case 'dust':
-        case 'sand':
-        case 'ash':
-        case 'squall':
-        case 'tornado':
-            return 'https://openweathermap.org/img/wn/50d@2x.png';
-        default:
-            return '';
+            case 'broken clouds':
+                return 'https://openweathermap.org/img/wn/04d@2x.png';
+            case 'shower rain':
+            case 'drizzle':
+                return 'https://openweathermap.org/img/wn/09d@2x.png';
+            case 'rain':
+                return 'https://openweathermap.org/img/wn/10d@2x.png';
+            case 'thunderstorm':
+                return 'https://openweathermap.org/img/wn/11d@2x.png';
+            case 'snow':
+            case 'sleet':
+                return 'https://openweathermap.org/img/wn/13d@2x.png';
+            case 'mist':
+            case 'fog':
+            case 'haze':
+            case 'smoke':
+            case 'dust':
+            case 'sand':
+            case 'ash':
+            case 'squall':
+            case 'tornado':
+                return 'https://openweathermap.org/img/wn/50d@2x.png';
+            default:
+                return '';
+        }
     }
-}
