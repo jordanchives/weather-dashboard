@@ -1,5 +1,5 @@
 const weatherUrl = 'http://api.openweathermap.org';
-const apiKey = '';
+const apiKey = localStorage.getItem('weatherAPI') || prompt("Enter your weather API key");
 localStorage.setItem('weatherAPI', apiKey);
 
 $(document).ready(function () {
@@ -7,6 +7,7 @@ $(document).ready(function () {
     const searchInput = $('#searchText');
     const today = $('#today');
     const history = $('#history');
+    const daysContainer = $('#days');
     const fiveDayContainer = $('#fiveDay');
 
 
@@ -31,6 +32,8 @@ $(document).ready(function () {
                 .then(forecast => {
                     if (forecast) {
                         // If forecast data is available, update the UI or do further processing
+                        updateToday(city, forecast[0].weather, forecast[0].temp, forecast[0].wind, forecast[0].humidity, forecast[0].date);
+                        updateFiveDay(forecast.slice(1));
                         console.log('Forecast:', forecast);
                     } else {
                         // If forecast data is not available, handle the error
@@ -46,7 +49,45 @@ $(document).ready(function () {
             console.error('Please enter a city name');
         }
     });
+
+    function updateToday(city, weather, temp, wind, humidity, date) {
+        const formattedDate = dayjs.unix(date).format('(M/D/YYYY)');
+        today.html(`
+            <h2>${city} ${formattedDate}</h2>
+            <p>Weather: ${weather}</p>
+            <p>Temperature: ${temp}°F</p>
+            <p>Wind: ${wind} mph</p>
+            <p>Humidity: ${humidity}%</p>
+        `);
+    }
+    
+    function updateFiveDay(fiveDay) {
+        daysContainer.empty();
+        for (const day of fiveDay) {
+            const date = dayjs.unix(day.date).format('M/D/YYYY');
+            const weather = day.weather;
+            const temp = day.temp;
+            const wind = day.wind;
+            const humidity = day.humidity;
+    
+            const card = $(`
+                <div class="col card m-1">
+                    <div class="card-body">
+                        <h5 class="card-title">${date}</h5>
+                        <p class="card-text">Weather: ${weather}</p>
+                        <p class="card-text">Temperature: ${temp}°F</p>
+                        <p class="card-text">Wind: ${wind} mph</p>
+                        <p class="card-text">Humidity: ${humidity}%</p>
+                    </div>
+                </div>
+            `);
+
+            daysContainer.append(card);
+        }
+    }
 });
+
+
 
 async function getCoords(city) {
     console.log('Fetching coordinates for:', city);
@@ -54,14 +95,13 @@ async function getCoords(city) {
     url.searchParams.append('q', city);
     url.searchParams.append('limit', 1)
     url.searchParams.append('appid', apiKey);
-    
+
     try {
         const response = await fetch(url); // Wait for the fetch request to complete
         const data = await response.json(); // Wait for the JSON parsing to complete
         console.log('Coordinates response:', data);
 
         if (!data[0]) {
-            console.log(null);
             return null;
         } else {
             const coords = { lat: data[0].lat, lon: data[0].lon };
@@ -79,31 +119,44 @@ async function getFiveDay(coords) {
     url.searchParams.append('lat', coords.lat);
     url.searchParams.append('lon', coords.lon);
     url.searchParams.append('appid', apiKey);
-    
+    url.searchParams.append('units', 'imperial');
+
     try {
-        const response = await fetch(url); // Wait for the fetch request to complete
-        const data = await response.json(); // Wait for the JSON parsing to complete
+        const response = await fetch(url);
+        const data = await response.json();
         console.log('Five-day forecast response:', data);
 
         if (!data) {
             return null;
         } else {
-            const fiveDay = [];
-            for (const day of data.list) {
-                const dayObj = {
-                    date: day.dt,
-                    weather: day.weather[0].main,
-                    temp: day.main.temp,
-                    wind: day.wind.speed,
-                    humidity: day.main.humidity
-                };
-                fiveDay.push(dayObj);
+            const forecast = [];
+            const today = dayjs().startOf('day');
+
+            for (let i = 0; i < 6; i++) {
+                const nextDay = today.add(i, 'day');
+
+                const dayForecast = data.list.find(day => {
+                    const forecastDate = dayjs.unix(day.dt).startOf('day');
+                    return forecastDate.isSame(nextDay);
+                });
+
+                if (dayForecast) {
+                    const dayObj = {
+                        date: dayForecast.dt,
+                        weather: dayForecast.weather[0].main,
+                        temp: dayForecast.main.temp,
+                        wind: dayForecast.wind.speed,
+                        humidity: dayForecast.main.humidity
+                    };
+                    forecast.push(dayObj);
+                }
             }
-            console.log('Five-day forecast:', fiveDay);
-            return fiveDay;
+
+            console.log('Five-day forecast:', forecast);
+            return forecast;
         }
     } catch (error) {
         console.error('Error getting five-day forecast:', error);
-        throw error; // Propagate the error to the caller
+        throw error;
     }
 }
